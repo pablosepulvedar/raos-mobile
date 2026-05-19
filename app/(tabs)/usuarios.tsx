@@ -12,6 +12,7 @@ export default function Usuarios() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   useEffect(() => {
     fetchUsuarios()
@@ -83,6 +84,50 @@ export default function Usuarios() {
       console.error('[Usuarios] ❌ ERROR INESPERADO:', error.message)
       console.error('[Usuarios] Stack:', error)
       Alert.alert('Error', 'Ocurrió un error al cambiar el estado')
+    }
+  }
+
+  const confirmEliminarUsuario = (usuario: any) => {
+    Alert.alert(
+      'Eliminar usuario',
+      `¿Estás seguro de que deseas eliminar a ${usuario.nombre}?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Eliminar', style: 'destructive', onPress: () => eliminarUsuario(usuario) }
+      ]
+    )
+  }
+
+  const eliminarUsuario = async (usuario: any) => {
+    try {
+      setDeletingId(usuario.id)
+      console.log('[Usuarios] Eliminando usuario:', usuario.id)
+      const { error, status, count } = await supabase
+        .from('perfiles')
+        .delete()
+        .eq('id', usuario.id)
+
+      console.log('[Usuarios] DELETE Status:', status)
+      console.log('[Usuarios] DELETE Count:', count)
+      console.log('[Usuarios] DELETE Error:', error)
+
+      if (error) {
+        console.error('[Usuarios] ❌ ERROR ELIMINANDO:', JSON.stringify(error))
+        Alert.alert('Error', error.message || 'No se pudo eliminar el usuario')
+        return
+      }
+
+      if (status === 204 || status === 200) {
+        console.log('[Usuarios] ✅ Eliminación exitosa, refrescando lista...')
+        await fetchUsuarios()
+      } else {
+        console.log('[Usuarios] ⚠️ Status inesperado en delete:', status)
+      }
+    } catch (error: any) {
+      console.error('[Usuarios] ❌ ERROR INESPERADO ELIMINANDO:', error)
+      Alert.alert('Error', 'Ocurrió un error al eliminar el usuario')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -278,7 +323,7 @@ export default function Usuarios() {
               alignItems: 'center'
             }}
           >
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, marginRight: 10 }}>
               <Text style={{ fontSize: 16, fontWeight: '700', color: '#1e5a96' }}>
                 {usuario.nombre}
               </Text>
@@ -286,12 +331,30 @@ export default function Usuarios() {
                 {usuario.activo ? '✅ Activo' : '❌ Inactivo'}
               </Text>
             </View>
-            <Switch
-              value={usuario.activo}
-              onValueChange={() => toggleActivo(usuario)}
-              thumbColor={usuario.activo ? '#4fa3ff' : '#ccc'}
-              trackColor={{ false: '#ddd', true: '#b0d4f1' }}
-            />
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Switch
+                value={usuario.activo}
+                onValueChange={() => toggleActivo(usuario)}
+                thumbColor={usuario.activo ? '#4fa3ff' : '#ccc'}
+                trackColor={{ false: '#ddd', true: '#b0d4f1' }}
+              />
+              <Pressable
+                onPress={() => confirmEliminarUsuario(usuario)}
+                disabled={deletingId === usuario.id}
+                style={{
+                  marginLeft: 10,
+                  padding: 8,
+                  borderRadius: 8,
+                  backgroundColor: '#ffe5e5',
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
+              >
+                <Text style={{ color: '#d11a2a', fontWeight: '700', fontSize: 16 }}>
+                  {deletingId === usuario.id ? '...' : '🗑️'}
+                </Text>
+              </Pressable>
+            </View>
           </View>
         ))}
 
