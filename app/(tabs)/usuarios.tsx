@@ -1,5 +1,6 @@
+import { useFocusEffect } from '@react-navigation/native'
 import { useRouter } from 'expo-router'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { ActivityIndicator, Alert, Pressable, RefreshControl, ScrollView, Switch, Text, TextInput, View } from 'react-native'
 import { supabase } from '../../lib/supabase'
 
@@ -47,6 +48,20 @@ export default function Usuarios() {
     await fetchUsuarios()
     setRefreshing(false)
   }
+
+  const resetForm = () => {
+    setNombre('')
+    setEmail('')
+    setPassword('')
+    setShowForm(false)
+  }
+
+  useFocusEffect(
+    useCallback(() => {
+      resetForm()
+      return () => {}
+    }, [])
+  )
 
   const toggleActivo = async (usuario: any) => {
     try {

@@ -114,6 +114,54 @@ export default function Home() {
             Ver y gestionar reservas
           </Text>
         </Pressable>
+
+        {/* Pilotos */}
+        <Pressable
+          onPress={() => router.push('/pilotos')}
+          style={{
+            backgroundColor: '#34a853',
+            paddingVertical: 18,
+            paddingHorizontal: 20,
+            borderRadius: 12,
+            marginTop: 12,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.15,
+            shadowRadius: 3.84,
+            elevation: 5
+          }}
+        >
+          <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>
+            ✈️ Pilotos
+          </Text>
+          <Text style={{ color: '#e7f5ea', fontSize: 12, marginTop: 4 }}>
+            Ver y gestionar pilotos
+          </Text>
+        </Pressable>
+
+        {/* Varios */}
+        <Pressable
+          onPress={() => router.push('/varios')}
+          style={{
+            backgroundColor: '#6f42c1',
+            paddingVertical: 18,
+            paddingHorizontal: 20,
+            borderRadius: 12,
+            marginTop: 12,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.15,
+            shadowRadius: 3.84,
+            elevation: 5
+          }}
+        >
+          <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>
+            ⚙️ Varios
+          </Text>
+          <Text style={{ color: '#e9ddf6', fontSize: 12, marginTop: 4 }}>
+            Accede a horarios y valores
+          </Text>
+        </Pressable>
       </View>
     </ScrollView>
   )

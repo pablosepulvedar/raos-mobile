@@ -67,9 +67,41 @@ export default function TabsLayout() {
       headerTintColor: '#fff'
     }}>
       <Tabs.Screen name="index" options={{ title: 'Inicio', headerRight: LogoutButton }} />
-      <Tabs.Screen name="usuarios" options={{ title: 'Usuarios', headerRight: LogoutButton, href: null }} />
-      <Tabs.Screen name="reservas" options={{ title: 'Reservas', headerRight: LogoutButton, href: null }} />
-      <Tabs.Screen name="explore" options={{ href: null }} />
+      <Tabs.Screen
+        name="usuarios"
+        options={{
+          title: 'Usuarios',
+          headerRight: LogoutButton,
+          tabBarButton: () => null
+        }}
+      />
+      <Tabs.Screen
+        name="reservas"
+        options={{
+          title: 'Reservas',
+          headerRight: LogoutButton,
+          tabBarButton: () => null
+        }}
+      />
+      <Tabs.Screen
+        name="varios"
+        options={{
+          title: 'Varios',
+          headerRight: LogoutButton,
+          tabBarButton: () => null
+        }}
+      />
+      <Tabs.Screen name="varios/horarios" options={{ tabBarButton: () => null }} />
+      <Tabs.Screen name="varios/valores" options={{ tabBarButton: () => null }} />
+      <Tabs.Screen
+        name="pilotos"
+        options={{
+          title: 'Pilotos',
+          headerRight: LogoutButton,
+          tabBarButton: () => null
+        }}
+      />
+      <Tabs.Screen name="explore" options={{ tabBarButton: () => null }} />
     </Tabs>
   )
 
