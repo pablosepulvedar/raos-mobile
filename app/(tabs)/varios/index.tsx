@@ -17,7 +17,7 @@ export default function Varios() {
 
       <View style={{ paddingHorizontal: 20, paddingVertical: 30 }}>
         <Pressable
-          onPress={() => router.push('/varios/horarios')}
+          onPress={() => router.push('/(tabs)/varios/horarios')}
           style={{
             backgroundColor: '#fff',
             paddingVertical: 18,
@@ -37,7 +37,27 @@ export default function Varios() {
         </Pressable>
 
         <Pressable
-          onPress={() => router.push('/varios/valores')}
+          onPress={() => router.push('/(tabs)/varios/valores')}
+          style={{
+            backgroundColor: '#fff',
+            paddingVertical: 18,
+            paddingHorizontal: 20,
+            borderRadius: 12,
+            marginBottom: 12,
+            borderWidth: 1,
+            borderColor: '#d3c0ff'
+          }}
+        >
+          <Text style={{ color: '#3c1361', fontSize: 16, fontWeight: '700' }}>
+            💲 Valores
+          </Text>
+          <Text style={{ color: '#5a3cbc', fontSize: 12, marginTop: 4 }}>
+            Configuración de valores
+          </Text>
+        </Pressable>
+
+        <Pressable
+          onPress={() => router.push('/(tabs)/varios/roles')}
           style={{
             backgroundColor: '#fff',
             paddingVertical: 18,
@@ -48,10 +68,10 @@ export default function Varios() {
           }}
         >
           <Text style={{ color: '#3c1361', fontSize: 16, fontWeight: '700' }}>
-            💲 Valores
+            🛡️ Roles
           </Text>
           <Text style={{ color: '#5a3cbc', fontSize: 12, marginTop: 4 }}>
-            Configuración de valores
+            Agregar y gestionar roles
           </Text>
         </Pressable>
       </View>

@@ -1,29 +1,28 @@
-import { useRouter } from 'expo-router'
 import { useState } from 'react'
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput } from 'react-native'
+import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput } from 'react-native'
 import { supabase } from '../lib/supabase'
 
 export default function Login() {
-
-  const router = useRouter()
-
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const login = async () => {
-
-    const { data, error } =
-      await supabase.auth.signInWithPassword({
-        email,
-        password
-      })
-
-    console.log(data, error)
-
-    if (data.session) {
-      router.replace('/(tabs)')
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Error', 'Ingresa correo y contraseña')
+      return
     }
 
+    setLoading(true)
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password: password.trim()
+    })
+    setLoading(false)
+
+    if (error) {
+      Alert.alert('Error', error.message)
+    }
   }
 
   return (
@@ -76,17 +75,17 @@ export default function Login() {
 
         <Pressable
           onPress={login}
+          disabled={loading}
           style={{
             backgroundColor: '#fff',
             padding: 15,
-            borderRadius: 10
+            borderRadius: 10,
+            opacity: loading ? 0.7 : 1
           }}
         >
-
           <Text style={{ textAlign: 'center', fontWeight: 'bold' }}>
-            Iniciar sesión
+            {loading ? 'Ingresando...' : 'Iniciar sesión'}
           </Text>
-
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>

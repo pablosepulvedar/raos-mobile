@@ -1,55 +1,43 @@
 import { useFocusEffect } from '@react-navigation/native'
 import { useRouter } from 'expo-router'
 import { useCallback, useEffect, useState } from 'react'
-import { ActivityIndicator, Alert, Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native'
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
 import { supabase } from '../../../lib/supabase'
 
-const formatCurrency = (value: number | string) => {
-  const number = Number(value)
-  if (Number.isNaN(number)) return ''
-  return `$${number.toLocaleString('es-CL')}`
-}
-
-export default function Valores() {
+export default function Roles() {
   const router = useRouter()
-  const [valores, setValores] = useState<any[]>([])
-  const [servicio, setServicio] = useState('')
-  const [monto, setMonto] = useState('')
-  const [piloto, setPiloto] = useState(false)
-  const [pasajero, setPasajero] = useState(true)
+  const [roles, setRoles] = useState<any[]>([])
+  const [nombre, setNombre] = useState('')
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
 
-  const fetchValores = async () => {
+  const fetchRoles = async () => {
     setLoading(true)
     try {
       const { data, error } = await supabase
-        .from('valores')
+        .from('roles')
         .select('*')
-        .order('updated_at', { ascending: false })
+        .order('nombre', { ascending: true })
 
       if (error) {
-        Alert.alert('Error', 'No se pudieron cargar los valores')
+        Alert.alert('Error', 'No se pudieron cargar los roles')
       } else {
-        setValores(data || [])
+        setRoles(data || [])
       }
     } catch {
-      Alert.alert('Error', 'Ocurrió un error al cargar los valores')
+      Alert.alert('Error', 'Ocurrió un error al cargar los roles')
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchValores()
+    fetchRoles()
   }, [])
 
   const resetForm = () => {
-    setServicio('')
-    setMonto('')
-    setPiloto(false)
-    setPasajero(true)
+    setNombre('')
     setEditingId(null)
   }
 
@@ -60,66 +48,50 @@ export default function Valores() {
     }, [])
   )
 
-  const saveValor = async () => {
-    if (!servicio.trim() || !monto.trim()) {
-      Alert.alert('Error', 'Completa el servicio y el monto')
-      return
-    }
-
-    const numericMonto = Number(monto.replace(/[^0-9]/g, ''))
-    if (Number.isNaN(numericMonto)) {
-      Alert.alert('Error', 'El monto debe contener solo números')
+  const saveRol = async () => {
+    if (!nombre.trim()) {
+      Alert.alert('Error', 'Ingresa el nombre del rol')
       return
     }
 
     setSaving(true)
     try {
-      const payload = {
-        servicio: servicio.trim(),
-        monto: numericMonto,
-        piloto,
-        pasajero
-      }
-
       if (editingId) {
         const { error } = await supabase
-          .from('valores')
-          .update(payload)
+          .from('roles')
+          .update({ nombre: nombre.trim() })
           .eq('id', editingId)
 
         if (error) {
           throw error
         }
-        Alert.alert('Actualizado', 'Valor actualizado correctamente')
+        Alert.alert('Actualizado', 'Rol actualizado correctamente')
       } else {
         const { error } = await supabase
-          .from('valores')
-          .insert(payload)
+          .from('roles')
+          .insert({ nombre: nombre.trim() })
 
         if (error) {
           throw error
         }
-        Alert.alert('Creado', 'Valor agregado correctamente')
+        Alert.alert('Creado', 'Rol agregado correctamente')
       }
       resetForm()
-      await fetchValores()
+      await fetchRoles()
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'No se pudo guardar el valor')
+      Alert.alert('Error', error.message || 'No se pudo guardar el rol')
     } finally {
       setSaving(false)
     }
   }
 
-  const editValor = (item: any) => {
-    setServicio(item.servicio || '')
-    setMonto(String(item.monto ?? ''))
-    setPiloto(Boolean(item.piloto))
-    setPasajero(item.pasajero !== false)
+  const editRol = (item: any) => {
+    setNombre(item.nombre || '')
     setEditingId(item.id)
   }
 
-  const deleteValor = async (item: any) => {
-    Alert.alert('Eliminar valor', `¿Eliminar el servicio ${item.servicio}?`, [
+  const deleteRol = async (item: any) => {
+    Alert.alert('Eliminar rol', `¿Eliminar el rol "${item.nombre}"?`, [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Eliminar',
@@ -127,16 +99,24 @@ export default function Valores() {
         onPress: async () => {
           try {
             const { error } = await supabase
-              .from('valores')
+              .from('roles')
               .delete()
               .eq('id', item.id)
 
             if (error) {
               throw error
             }
-            fetchValores()
-          } catch {
-            Alert.alert('Error', 'No se pudo eliminar el valor')
+            if (editingId === item.id) {
+              resetForm()
+            }
+            fetchRoles()
+          } catch (error: any) {
+            Alert.alert(
+              'Error',
+              error.message?.includes('foreign key')
+                ? 'No se puede eliminar: el rol está asignado a usuarios'
+                : 'No se pudo eliminar el rol'
+            )
           }
         }
       }
@@ -150,21 +130,21 @@ export default function Valores() {
           <Text style={{ color: '#3c1361', fontSize: 24 }}>←</Text>
         </Pressable>
         <Text style={{ color: '#3c1361', fontSize: 24, fontWeight: '700' }}>
-          💲 Valores
+          🛡️ Roles
         </Text>
       </View>
 
       <View style={{ padding: 20 }}>
         <View style={{ marginBottom: 16 }}>
           <Text style={{ color: '#333', fontSize: 16, marginBottom: 8 }}>
-            Valores existentes
+            Roles existentes
           </Text>
           {loading ? (
             <ActivityIndicator size="small" color="#3c1361" />
-          ) : valores.length === 0 ? (
-            <Text style={{ color: '#666' }}>No hay valores registrados.</Text>
+          ) : roles.length === 0 ? (
+            <Text style={{ color: '#666' }}>No hay roles registrados.</Text>
           ) : (
-            valores.map((item) => (
+            roles.map((item) => (
               <View
                 key={item.id}
                 style={{
@@ -179,14 +159,7 @@ export default function Valores() {
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                   <View>
                     <Text style={{ fontSize: 16, fontWeight: '700', color: '#3c1361' }}>
-                      {item.servicio}
-                    </Text>
-                    <Text style={{ color: '#666', fontSize: 14, marginTop: 4 }}>
-                      {formatCurrency(item.monto)}
-                    </Text>
-                    <Text style={{ color: '#666', fontSize: 12, marginTop: 4 }}>
-                      {item.piloto ? 'Piloto' : ''}{item.piloto && item.pasajero ? ' · ' : ''}{item.pasajero ? 'Pasajero' : ''}
-                      {!item.piloto && !item.pasajero ? 'Sin tipo' : ''}
+                      {item.nombre}
                     </Text>
                     <Text style={{ color: '#666', fontSize: 12, marginTop: 4 }}>
                       Creado: {item.created_at ? new Date(item.created_at).toLocaleString() : '---'}
@@ -194,13 +167,13 @@ export default function Valores() {
                   </View>
                   <View style={{ flexDirection: 'row', gap: 8 }}>
                     <Pressable
-                      onPress={() => editValor(item)}
+                      onPress={() => editRol(item)}
                       style={{ paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8, backgroundColor: '#6f42c1' }}
                     >
                       <Text style={{ color: '#fff', fontWeight: '700' }}>Editar</Text>
                     </Pressable>
                     <Pressable
-                      onPress={() => deleteValor(item)}
+                      onPress={() => deleteRol(item)}
                       style={{ paddingVertical: 6, paddingHorizontal: 12, borderRadius: 8, backgroundColor: '#d9534f' }}
                     >
                       <Text style={{ color: '#fff', fontWeight: '700' }}>Borrar</Text>
@@ -214,15 +187,15 @@ export default function Valores() {
 
         <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: '#e4d8ff' }}>
           <Text style={{ fontSize: 16, fontWeight: '700', color: '#3c1361', marginBottom: 10 }}>
-            {editingId ? 'Editar valor' : 'Agregar valor'}
+            {editingId ? 'Editar rol' : 'Agregar rol'}
           </Text>
 
           <View style={{ marginBottom: 12 }}>
-            <Text style={{ color: '#1e5a96', fontWeight: '700', marginBottom: 6 }}>Servicio</Text>
+            <Text style={{ color: '#1e5a96', fontWeight: '700', marginBottom: 6 }}>Nombre</Text>
             <TextInput
-              placeholder="vuelo normal"
-              value={servicio}
-              onChangeText={setServicio}
+              placeholder="admin, piloto, recepción..."
+              value={nombre}
+              onChangeText={setNombre}
               style={{
                 backgroundColor: '#fff',
                 padding: 12,
@@ -233,44 +206,8 @@ export default function Valores() {
             />
           </View>
 
-          <View style={{ marginBottom: 12 }}>
-            <Text style={{ color: '#1e5a96', fontWeight: '700', marginBottom: 6 }}>Monto</Text>
-            <View style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              backgroundColor: '#fff',
-              paddingHorizontal: 12,
-              borderRadius: 8,
-              borderWidth: 1,
-              borderColor: '#d3c0ff'
-            }}>
-              <Text style={{ color: '#999', marginRight: 8 }}>$</Text>
-              <TextInput
-                placeholder="65000"
-                value={monto}
-                onChangeText={(text) => setMonto(text.replace(/[^0-9]/g, ''))}
-                keyboardType="numeric"
-                style={{
-                  flex: 1,
-                  paddingVertical: 12,
-                  color: '#000'
-                }}
-              />
-            </View>
-          </View>
-
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <Text style={{ color: '#1e5a96', fontWeight: '700' }}>Aplica a piloto</Text>
-            <Switch value={piloto} onValueChange={setPiloto} trackColor={{ false: '#ccc', true: '#6f42c1' }} />
-          </View>
-
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <Text style={{ color: '#1e5a96', fontWeight: '700' }}>Aplica a pasajero</Text>
-            <Switch value={pasajero} onValueChange={setPasajero} trackColor={{ false: '#ccc', true: '#6f42c1' }} />
-          </View>
-
           <Pressable
-            onPress={saveValor}
+            onPress={saveRol}
             disabled={saving}
             style={{
               backgroundColor: '#6f42c1',
@@ -280,7 +217,7 @@ export default function Valores() {
             }}
           >
             <Text style={{ color: '#fff', fontWeight: '700' }}>
-              {saving ? 'Guardando...' : editingId ? 'Actualizar valor' : 'Agregar valor'}
+              {saving ? 'Guardando...' : editingId ? 'Actualizar rol' : 'Agregar rol'}
             </Text>
           </Pressable>
 

@@ -1,108 +1,108 @@
-import { Tabs, useRouter } from 'expo-router'
-import { useEffect, useState } from 'react'
-import { Pressable, Text } from 'react-native'
-import { supabase } from '../../lib/supabase'
+import { Tabs, usePathname, useRouter } from 'expo-router'
+import { useCallback, useRef, useState } from 'react'
+import { Pressable, Text, View } from 'react-native'
+import { IconSymbol } from '@/components/ui/icon-symbol'
+import { LogoutButton } from '@/components/logout-button'
+import { signOut } from '@/lib/auth'
 
-export default function TabsLayout() {
-
+function CustomTabBar() {
   const router = useRouter()
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        router.replace('/')
-      }
-      setLoading(false)
-    })
-  }, [])
-
-  const handleLogout = async () => {
-    try {
-      console.log('[Logout] Iniciando cierre de sesión')
-      
-      // Intenta cerrar sesión, pero no espera si hay error de red
-      const logoutPromise = supabase.auth.signOut({
-        scope: 'local'
-      })
-      
-      // Timeout de 3 segundos
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Timeout')), 3000)
-      )
-      
-      try {
-        await Promise.race([logoutPromise, timeoutPromise])
-        console.log('[Logout] Sesión cerrada exitosamente')
-      } catch (timeoutError) {
-        console.log('[Logout] Timeout o error en logout, continuando igual')
-      }
-      
-      console.log('[Logout] Redirigiendo al login')
-      // Siempre redirige, sin importar si el logout funcionó o no
-      setTimeout(() => {
-        router.replace('/')
-      }, 100)
-    } catch (error: any) {
-      console.error('[Logout] Error inesperado:', error.message)
-      console.log('[Logout] Forzando redirección al login')
-      router.replace('/')
-    }
-  }
-
-  if (loading) return null
-
-  const LogoutButton = () => (
-    <Pressable onPress={handleLogout} style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
-      <Text style={{ color: '#007AFF', fontWeight: '600' }}>
-        Cerrar sesión
-      </Text>
-    </Pressable>
-  )
+  const pathname = usePathname()
+  const isHome =
+    pathname === '/(tabs)' ||
+    pathname === '/(tabs)/' ||
+    pathname === '/(tabs)/index' ||
+    pathname.endsWith('/index')
 
   return (
-    <Tabs screenOptions={{
-      headerShown: true,
-      headerStyle: { backgroundColor: '#000' },
-      headerTintColor: '#fff'
-    }}>
-      <Tabs.Screen name="index" options={{ title: 'Inicio', headerRight: LogoutButton }} />
+    <View
+      style={{
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        borderTopWidth: 1,
+        borderTopColor: '#e5e5e5',
+        paddingTop: 10,
+        paddingBottom: 24
+      }}
+    >
+      <Pressable
+        onPress={() => router.push('/(tabs)/')}
+        style={{ alignItems: 'center', minWidth: 72 }}
+      >
+        <IconSymbol name="house.fill" size={28} color={isHome ? '#1e5a96' : '#999'} />
+        <Text
+          style={{
+            color: isHome ? '#1e5a96' : '#999',
+            fontSize: 12,
+            fontWeight: isHome ? '700' : '500',
+            marginTop: 4
+          }}
+        >
+          Inicio
+        </Text>
+      </Pressable>
+    </View>
+  )
+}
+
+export default function TabsLayout() {
+  const [loggingOut, setLoggingOut] = useState(false)
+  const loggingOutRef = useRef(false)
+
+  const handleLogout = useCallback(async () => {
+    if (loggingOutRef.current) return
+
+    loggingOutRef.current = true
+    setLoggingOut(true)
+    console.log('[Auth] botón Cerrar sesión presionado')
+
+    try {
+      await signOut()
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err)
+      console.log('[Auth] signOut error', message)
+    } finally {
+      loggingOutRef.current = false
+      setLoggingOut(false)
+    }
+  }, [])
+
+  const renderLogout = useCallback(
+    () => <LogoutButton onPress={handleLogout} disabled={loggingOut} />,
+    [handleLogout, loggingOut]
+  )
+
+  const hiddenTab = { href: null } as const
+
+  return (
+    <Tabs
+      tabBar={() => <CustomTabBar />}
+      screenOptions={{
+        headerShown: true,
+        headerStyle: { backgroundColor: '#000' },
+        headerTintColor: '#fff'
+      }}
+    >
+      <Tabs.Screen name="index" options={{ title: 'Inicio', headerRight: renderLogout }} />
       <Tabs.Screen
         name="usuarios"
-        options={{
-          title: 'Usuarios',
-          headerRight: LogoutButton,
-          tabBarButton: () => null
-        }}
+        options={{ title: 'Usuarios', headerRight: renderLogout, ...hiddenTab }}
       />
       <Tabs.Screen
         name="reservas"
-        options={{
-          title: 'Reservas',
-          headerRight: LogoutButton,
-          tabBarButton: () => null
-        }}
+        options={{ title: 'Reservas', headerRight: renderLogout, ...hiddenTab }}
       />
       <Tabs.Screen
         name="varios"
-        options={{
-          title: 'Varios',
-          headerRight: LogoutButton,
-          tabBarButton: () => null
-        }}
+        options={{ title: 'Varios', headerRight: renderLogout, ...hiddenTab }}
       />
-      <Tabs.Screen name="varios/horarios" options={{ tabBarButton: () => null }} />
-      <Tabs.Screen name="varios/valores" options={{ tabBarButton: () => null }} />
       <Tabs.Screen
         name="pilotos"
-        options={{
-          title: 'Pilotos',
-          headerRight: LogoutButton,
-          tabBarButton: () => null
-        }}
+        options={{ title: 'Pago pilotos', headerRight: renderLogout, ...hiddenTab }}
       />
-      <Tabs.Screen name="explore" options={{ tabBarButton: () => null }} />
+      <Tabs.Screen name="explore" options={hiddenTab} />
     </Tabs>
   )
-
 }

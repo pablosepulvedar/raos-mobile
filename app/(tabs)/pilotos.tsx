@@ -24,14 +24,11 @@ export default function Pilotos() {
         .select('*')
         .order('created_at', { ascending: false })
 
-      if (error) {
-        console.error('[Pilotos] Error al cargar:', error)
-        return
+      if (!error) {
+        setPilotos(data || [])
       }
-
-      setPilotos(data || [])
-    } catch (error: any) {
-      console.error('[Pilotos] Error inesperado:', error)
+    } catch {
+      // Sin acción
     }
   }
 
@@ -86,7 +83,7 @@ export default function Pilotos() {
           <Text style={{ color: '#fff', fontSize: 24 }}>← Volver</Text>
         </Pressable>
         <Text style={{ color: '#fff', fontSize: 24, fontWeight: 'bold', flex: 1, textAlign: 'center' }}>
-          ✈️ Pilotos
+          💵 Pago pilotos
         </Text>
       </View>
 

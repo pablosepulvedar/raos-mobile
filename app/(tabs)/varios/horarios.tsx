@@ -37,13 +37,11 @@ export default function Horarios() {
         .order('horario', { ascending: true })
 
       if (error) {
-        console.error('[Horarios] Error fetching:', error)
         Alert.alert('Error', 'No se pudieron cargar los horarios')
       } else {
         setHorarios(data || [])
       }
-    } catch (error: any) {
-      console.error('[Horarios] Unexpected error:', error)
+    } catch {
       Alert.alert('Error', 'Ocurrió un error al cargar los horarios')
     } finally {
       setLoading(false)
@@ -99,7 +97,6 @@ export default function Horarios() {
       resetForm()
       await fetchHorarios()
     } catch (error: any) {
-      console.error('[Horarios] Save error:', error)
       Alert.alert('Error', error.message || 'No se pudo guardar el horario')
     } finally {
       setSaving(false)
@@ -130,8 +127,7 @@ export default function Horarios() {
               throw error
             }
             fetchHorarios()
-          } catch (error: any) {
-            console.error('[Horarios] Delete error:', error)
+          } catch {
             Alert.alert('Error', 'No se pudo eliminar el horario')
           }
         }

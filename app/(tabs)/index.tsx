@@ -11,42 +11,27 @@ export default function Home() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        console.log('[Home] Obteniendo usuario actual')
         const { data, error } = await supabase.auth.getUser()
-        
-        if (error) {
-          console.error('[Home] Error al obtener usuario:', error)
-          return
+        if (error || !data.user) return
+
+        setUser(data.user as any)
+
+        const { data: profile } = await supabase
+          .from('perfiles')
+          .select('nombre')
+          .eq('id', data.user.id)
+          .single()
+
+        if (profile?.nombre) {
+          setUserName(profile.nombre)
+        } else {
+          setUserName(data.user.email?.split('@')[0] || 'Usuario')
         }
-        
-        if (data.user) {
-          console.log('[Home] Usuario encontrado:', data.user.id)
-          setUser(data.user as any)
-          
-          // Traer nombre desde tabla perfiles
-          const { data: profile, error: profileError } = await supabase
-            .from('perfiles')
-            .select('nombre')
-            .eq('id', data.user.id)
-            .single()
-          
-          if (profileError) {
-            console.log('[Home] Perfil no encontrado:', profileError.message)
-          }
-          
-          if (profile?.nombre) {
-            console.log('[Home] Nombre del perfil:', profile.nombre)
-            setUserName(profile.nombre)
-          } else {
-            console.log('[Home] Usando email como nombre')
-            setUserName(data.user.email?.split('@')[0] || 'Usuario')
-          }
-        }
-      } catch (error: any) {
-        console.error('[Home] Error inesperado:', error)
+      } catch {
+        // Sin acción: se muestra "Usuario" por defecto
       }
     }
-    
+
     fetchUser()
   }, [])
 
@@ -115,7 +100,7 @@ export default function Home() {
           </Text>
         </Pressable>
 
-        {/* Pilotos */}
+        {/* Pago pilotos */}
         <Pressable
           onPress={() => router.push('/pilotos')}
           style={{
@@ -132,10 +117,10 @@ export default function Home() {
           }}
         >
           <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>
-            ✈️ Pilotos
+            💵 Pago pilotos
           </Text>
           <Text style={{ color: '#e7f5ea', fontSize: 12, marginTop: 4 }}>
-            Ver y gestionar pilotos
+            Ver y gestionar pagos de pilotos
           </Text>
         </Pressable>
 
@@ -159,7 +144,7 @@ export default function Home() {
             ⚙️ Varios
           </Text>
           <Text style={{ color: '#e9ddf6', fontSize: 12, marginTop: 4 }}>
-            Accede a horarios y valores
+            Horarios, valores y roles
           </Text>
         </Pressable>
       </View>
